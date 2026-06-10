@@ -1,9 +1,9 @@
 from app.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Date
 import uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, date
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -25,11 +25,21 @@ class Dataset(Base):
 class DatasetRows(Base):
     __tablename__='datasetrows'
     row_id = Column(String(36), default=generate_uuid, primary_key=True, index=True, nullable=False)
-    row_data = Column(JSONB, nullable=False)
     dataset_id =  Column(String(36), ForeignKey('datasets.dataset_id'), index=True, nullable=False)
     row_index = Column(Integer)
     
+    user_id_field = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+    sex = Column(String)
+    email = Column(String)
+    phone = Column(String)
+    date_of_birth = Column(Date)
+    job_title = Column(String)
+    
+    
     dataset = relationship('Dataset', back_populates='rows')
+    
     
     
     

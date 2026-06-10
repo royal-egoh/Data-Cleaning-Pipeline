@@ -1,13 +1,31 @@
-# What does a dataset upload response look like?
-# What does a status check response look like?
-# Do you need a create schema for datasets or does the file come through differently?
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime, date
 
-from pydantic import BaseModel, ConfigDict, EmailStr, model_validator, Field, StrictBool
-from datetime import datetime
+class DatasetStatusResponse(BaseModel):
+    dataset_id: str
+    filename: str
+    status: str
+    row_count: int | None = None
+    uploaded_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+      
 
-class DatasetCreate(BaseModel):
-    pass
+class DatasetRowResponse(BaseModel):
+    row_id: str
+    dataset_id: str
+    row_index: int
+    
+    user_id_field: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    sex: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    date_of_birth: date | None = None
+    job_title: str | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
-class DatasetResponse(BaseModel):
-    pass
 
