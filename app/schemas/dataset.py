@@ -25,6 +25,7 @@ class DatasetRowResponse(BaseModel):
     phone: str | None = None
     date_of_birth: date | None = None
     job_title: str | None = None
+    # remark: str |None = None
     
     model_config = ConfigDict(from_attributes=True)
 

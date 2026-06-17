@@ -36,6 +36,7 @@ class DatasetRows(Base):
     phone = Column(String)
     date_of_birth = Column(Date)
     job_title = Column(String)
+    # remark = Column(String)
     
     
     dataset = relationship('Dataset', back_populates='rows')
