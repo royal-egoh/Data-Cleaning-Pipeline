@@ -1,5 +1,5 @@
 import pandas as pd
-import os
+import phonenumbers
 import re
 
 
@@ -56,8 +56,16 @@ def fill_nulls(df: pd.DataFrame, report: dict):
 
 def standardise_phone(df: pd.DataFrame):
     for index, phone in df["Phone"].items():
-        numbers_only = re.sub(r'[^\d]', '', phone)
-        df.loc[index, "Phone"] = numbers_only
+        if not pd.isna(phone) and phone != "Null":
+            # numbers_only = re.sub(r'[^\d]', '', phone)
+            # if len(numbers_only) != 10 and len(numbers_only) != 11:
+            #     df.loc[index, "Phone"] =  "Null"
+            #     continue
+            number = phonenumbers.parse(phone, "US")
+            # new_num = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+            new_num = number.national_number
+            df.loc[index, "Phone"] = str(new_num)
+        continue
     return df
 
 
@@ -93,6 +101,6 @@ def clean(df: pd.DataFrame, report: dict):
     df = fill_nulls(df, report)
     df = standardise_date(df)
     df = standardise_sex(df)
-    phone = standardise_phone(df)
+    df = standardise_phone(df)
     return df
     

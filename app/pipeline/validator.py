@@ -69,13 +69,15 @@ def check_sex_values(df: pd.DataFrame):
 def check_duplicates(df: pd.DataFrame):
     duplicates = set()
     # num_rows = len(df) 
-    important_col = ["User Id", "First name", "Phone", "Date of birth", "Email"]
+    important_col = ["User Id", "Phone", "Email"]
     exact_duplicates = df.index[df.duplicated()].tolist()
     duplicates.update(exact_duplicates)
-    for i in important_col:
-        if i in df.columns:
-            duplicates.update(df.index[df.duplicated(subset=i)].tolist())
-        continue
+    duplicates.update(df.index[df.duplicated(subset="User Id")].tolist())
+    duplicates.update(df.index[df.duplicated(subset=["Phone", "Email"])].tolist())
+    # for i in important_col:
+    #     if i in df.columns:
+    #         duplicates.update(df.index[df.duplicated(subset=i)].tolist())
+    #     continue
     return list(duplicates)
 
 def validate(df: pd.DataFrame):
@@ -87,5 +89,7 @@ def validate(df: pd.DataFrame):
     report["invalid_sex"] = check_sex_values(df)
     report["invalid_dates"] = check_dates(df)
     # report["invalid_jobs"] = check_jobs(df)
+
     return report
+
 

@@ -10,7 +10,7 @@ def generate_uuid():
 
 class Dataset(Base):
     __tablename__='datasets'
-    dataset_id =  Column(String(36),primary_key=True,  default=generate_uuid, index=True, nullable=False)
+    dataset_id =  Column(String(36),primary_key=True, default=generate_uuid, index=True, nullable=False)
     filename = Column(String, nullable=False)
     status = Column(String, default='pending')
     row_count = Column(Integer)
