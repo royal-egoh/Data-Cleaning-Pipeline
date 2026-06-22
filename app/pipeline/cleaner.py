@@ -1,6 +1,8 @@
 import pandas as pd
 import phonenumbers
 import re
+from joblib import Parallel, delayed
+import numpy as np
 
 
 # {
@@ -55,30 +57,36 @@ def fill_nulls(df: pd.DataFrame, report: dict):
     return df
 
 def standardise_phone(df: pd.DataFrame):
-    for index, phone in df["Phone"].items():
-        if not pd.isna(phone) and phone != "Null":
-            # numbers_only = re.sub(r'[^\d]', '', phone)
-            # if len(numbers_only) != 10 and len(numbers_only) != 11:
-            #     df.loc[index, "Phone"] =  "Null"
-            #     continue
-            number = phonenumbers.parse(phone, "US")
-            # new_num = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
-            new_num = number.national_number
-            df.loc[index, "Phone"] = str(new_num)
-        continue
+    def parse_single_phone(phone):
+        if pd.isna(phone) or str(phone).strip() == "Null":
+            return "Null"
+        try:
+            phone_str = str(phone).strip()
+            if phone_str.startswith("001"):
+                phone_str = "+" + phone_str[2:].lstrip("-")
+                number = phonenumbers.parse(phone_str, "US")
+                if not phonenumbers.is_valid(number):
+                    return "Null"
+                return str(number.national_number)
+        except Exception:
+            return "Null"
+    def process_series(chunk_data):
+        series_obj = pd.Series(chunk_data)
+        return series_obj.apply(parse_single_phone)
+    
+    raw_chunks = np.array_split(df["Phone"].values, 8)
+    
+    processed_chunks = Parallel(n_jobs=-1)(delayed(process_series)(c) for c in raw_chunks)
+    combined_series = pd.concat(processed_chunks)
+    combined_series.index = df.index
+    df.loc[:, "Phone"] = combined_series
     return df
-
 
 def standardise_sex(df: pd.DataFrame):
     allowed = ["m", "f"]
-    for index, sex in df["Sex"].items():
-        sex = str(sex).strip().lower()
-        if sex in allowed:
-            if sex == "m":
-                # df.at[index, "Sex"] = "Male"
-                df.loc[index, "Sex"] = "Male"
-            elif sex == "f":
-                df.loc[index, "Sex"] = "Female"
+    clean_sx = df["Sex"].astype(str).str.strip().str.lower()
+    mapping = {"m": "Male","male": "Male","f":"Female", "female": "Female",}
+    df["Sex"] = clean_sx.map(mapping).fillna(df["Sex"])
     return df
 
 
