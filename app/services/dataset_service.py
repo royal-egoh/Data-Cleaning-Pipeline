@@ -2,15 +2,25 @@ import pandas as pd
 import os
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
+from datetime import date
 from app.models.dataset import Dataset, DatasetRows
 
 def create_dataset_record(filename: str, user_id: str, db:Session):
-    new_dataset = Dataset(filename=filename, user_id=user_id)
-    db.add(new_dataset)
-    db.commit()
-    db.refresh(new_dataset)
-    return new_dataset
+    existing_file = db.execute(select(Dataset).where(Dataset.filename==filename)).scalar_one_or_none()
+    num_rows = len(pd.read_csv(filename))
+    if existing_file:
+        existing_file.user_id = user_id
+        existing_file.updated_at = func.now()
+        db.commit()
+        db.refresh(existing_file)
+        return existing_file
+    else:
+        new_dataset = Dataset(filename=filename, user_id=user_id, row_count=num_rows)
+        db.add(new_dataset)
+        db.commit()
+        db.refresh(new_dataset)
+        return new_dataset
 
 def get_dataset_by_id(dataset_id: str, db: Session):
     # dataset = db.query(Dataset).filter(Dataset.dataset_id == dataset_id).first()
@@ -26,18 +36,20 @@ def get_user_datasets(user_id: str, db: Session):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No datasets found for this user")
     return datasets
 
-def update_dataset_status(dataset_id: str, db: Session, new_status: str, row_count: int | None = None):
-    # dataset = db.query(Dataset).filter(Dataset.dataset_id==dataset_id).first()
-    dataset = db.execute(select(Dataset).where(Dataset.dataset_id==dataset_id)).scalar_one_or_none()
-    if not dataset:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found")
-    dataset.status = new_status
-    if row_count is not None:
-        dataset.row_count = row_count
-    db.add(dataset)
-    db.commit()
-    db.refresh(dataset)
-    return dataset
+
+
+# def update_dataset_status(dataset_id: str, db: Session, new_status: str, row_count: int | None = None):
+#     # dataset = db.query(Dataset).filter(Dataset.dataset_id==dataset_id).first()
+#     dataset = db.execute(select(Dataset).where(Dataset.dataset_id==dataset_id)).scalar_one_or_none()
+#     if not dataset:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found")
+#     dataset.status = new_status
+#     if row_count is not None:
+#         dataset.row_count = row_count
+#     # db.add(dataset)
+#     db.commit()
+#     db.refresh(dataset)
+#     return dataset
 
 def get_dataset_rows(dataset_id: str, db: Session, user_id: str, limit: int = 100, page: int = 1):
     if limit < 1 or page < 1:

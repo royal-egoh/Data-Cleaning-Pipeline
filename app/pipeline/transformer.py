@@ -2,6 +2,7 @@ import pandas as pd
 from app.models.dataset import Dataset, DatasetRows
 from app.database import engine
 from sqlalchemy.orm import Session
+import uuid
 
 def transform(df: pd.DataFrame):
     df.loc[:, "Index"] = df["Index"].astype(int)
@@ -19,12 +20,15 @@ def transform(df: pd.DataFrame):
     
 def load(df: pd.DataFrame, dataset_id: str):
     df["dataset_id"] = dataset_id
+    if "row_id" not in df.columns or df["row_id"].isnull().any():
+        df["row_id"] = [str(uuid.uuid4()) for _ in range(len(df))]
+    
     df.to_sql(
         name="datasetrows",
         con=engine,
         if_exists="append",
         index=False,
-        chunksize=5000,
+        chunksize=5000, 
         method="multi"
     )
 

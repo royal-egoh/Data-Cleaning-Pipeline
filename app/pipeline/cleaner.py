@@ -64,12 +64,12 @@ def standardise_phone(df: pd.DataFrame):
             phone_str = str(phone).strip()
             if phone_str.startswith("001"):
                 phone_str = "+" + phone_str[2:].lstrip("-")
-                number = phonenumbers.parse(phone_str, "US")
-                if not phonenumbers.is_valid(number):
-                    return "Null"
-                return str(number.national_number)
-        except Exception:
-            return "Null"
+            number = phonenumbers.parse(phone_str, "US")
+            # if not phonenumbers.is_valid_number(number):
+            #     return "Null_val"
+            return str(number.national_number)
+        except Exception as e:
+            return f"Null:{e}"
     def process_series(chunk_data):
         series_obj = pd.Series(chunk_data)
         return series_obj.apply(parse_single_phone)

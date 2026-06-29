@@ -12,7 +12,7 @@ class Dataset(Base):
     __tablename__='datasets'
     dataset_id =  Column(String(36),primary_key=True, default=generate_uuid, index=True, nullable=False)
     filename = Column(String, nullable=False)
-    status = Column(String, default='pending')
+    status = Column(String, default='Pending')
     row_count = Column(Integer)
     uploaded_at =  Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
